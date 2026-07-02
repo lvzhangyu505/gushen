@@ -3,6 +3,7 @@
 # Node / Next.js
 frontend/node_modules/
 frontend/.next/
+frontend/.vercel/
 frontend/out/
 frontend/.env*
 !frontend/.env.example
