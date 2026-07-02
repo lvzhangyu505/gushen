@@ -1,0 +1,30 @@
+.DS_Store
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env*
+!frontend/.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+backend/.venv/
+.pytest_cache/
+
+# Local generated files
+tmp/
+output/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor
+.idea/
+.vscode/
