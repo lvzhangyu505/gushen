@@ -186,6 +186,10 @@ export default function Home() {
     try {
       const nextTask = await createAnalysisTask(stockCode.trim(), timeHorizon);
       setTask(nextTask);
+      if (["completed", "partial", "failed"].includes(nextTask.status)) {
+        setIsLoading(false);
+        return;
+      }
       if (typeof EventSource === "undefined") {
         await pollTask(nextTask.id);
         return;
