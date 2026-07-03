@@ -1,139 +1,145 @@
-# AI 投研信息与投资建议平台当前进展总结
+# Gushen 当前进展总结
 
-更新时间：2026-07-02
+更新时间：2026-07-03
 
 ## 1. 项目定位
 
-本项目是一个个人自用的 AI 股票研究助手，定位为：
+Gushen 是个人自用的 AI 股票研究助手，定位为：
 
-> 信息收集 + 投资研究 + 决策辅助
+> 信息收集 + 多维研究 + 证据追踪 + 风险校验 + 分歧解释 + 历史复盘
 
-系统目标是帮助用户围绕自选股自动收集市场信息、上市公司公告、财经新闻、政策变化、行业动态、财报数据、研报摘要，并通过 AI 进行结构化分析，生成投资研究建议、风险提醒和每日投研日报。
+系统围绕 A 股自选股和单只股票研究，使用合法公开 API、授权数据源、用户提供文件或手动录入信息，通过 7 个专家 Agent、Orchestrator、RiskAgent 和 ComplianceGuard 输出结构化研究辅助结果。
 
-项目明确不是券商交易系统：
+项目明确不是券商交易系统，也不是自动交易系统：
 
-- 不接入券商账户
-- 不自动交易
-- 不下单
-- 不撤单
-- 不托管任何资金账户
-- 所有建议仅用于个人研究辅助，不构成确定性投资承诺
+- 不接入券商账户。
+- 不接入交易 API。
+- 不做账户同步。
+- 不自动交易。
+- 不下单，不撤单。
+- 不托管任何资金账户。
+- 不输出仓位建议、目标价承诺、保证收益或无风险表述。
+- 不替用户做最终投资决策。
+
+统一免责声明：
+
+> 本系统仅用于个人研究辅助，不构成确定性投资承诺。
 
 ## 2. 已完成内容
 
-### 2.1 项目文档体系
+### 2.1 文档体系
 
-已经创建完整的产品与工程规划文档：
+已经创建并对齐以下文档：
 
-- `README.md`：项目入口说明。
-- `AGENTS.md`：Codex 开发规范、合规红线、AI 输出约束。
-- `docs/PRD.md`：产品 PRD。
-- `docs/pages.md`：页面结构。
-- `docs/database.md`：PostgreSQL + pgvector 数据库表设计。
-- `docs/api.md`：FastAPI 后端接口设计。
-- `docs/ai-agents.md`：RAG 与多 Agent 架构设计。
-- `docs/data-pipeline.md`：数据采集流程。
-- `docs/templates.md`：日报和个股研究卡模板。
-- `docs/mvp-plan.md`：MVP 开发计划。
-- `docs/project-structure.md`：项目目录结构。
+- `README.md`
+- `AGENTS.md`
+- `docs/final-architecture.md`
+- `docs/PRD.md`
+- `docs/pages.md`
+- `docs/database.md`
+- `docs/api.md`
+- `docs/ai-agents.md`
+- `docs/data-pipeline.md`
+- `docs/templates.md`
+- `docs/mvp-plan.md`
+- `docs/project-structure.md`
+- `docs/task-packages/`
 
-### 2.2 工程目录结构
+### 2.2 Phase 1：Mock 分析闭环
 
-已经搭建基础目录：
+已完成可运行 FastAPI 后端：
 
-```text
-.
-├── AGENTS.md
-├── README.md
-├── docs/
-├── frontend/
-├── backend/
-├── infra/
-└── scripts/
-```
+- `POST /api/v1/analysis-tasks`
+- `GET /api/v1/analysis-tasks/{task_id}`
+- `GET /api/v1/analysis-tasks`
+- 7 个 Mock Agent。
+- Orchestrator 结构化聚合。
+- ComplianceGuard 违规表达拦截。
+- 后端测试覆盖 mock 分析链路。
 
-其中：
+### 2.3 Phase 2：异步任务状态与 SSE
 
-- `frontend/`：Next.js + Tailwind CSS 前端。
-- `backend/`：FastAPI 后端预留目录。
-- `infra/`：PostgreSQL、pgvector 等基础设施预留目录。
-- `scripts/`：后续开发、部署、合规扫描脚本预留目录。
+已完成 MVP：
 
-### 2.3 前端网页预览
+- 后端使用 `BackgroundTasks` 创建后台分析任务。
+- 任务状态支持 `pending`、`running`、`completed`、`partial`、`failed`。
+- 每个 Agent 保存运行状态、方向、置信度、错误信息和时间。
+- 已提供 `GET /api/v1/analysis-tasks/{task_id}/events` SSE 接口。
+- 前端优先使用 `EventSource` 消费 SSE，失败时回退轮询。
 
-已经完成一个可在线预览的 Next.js 页面。
+### 2.4 Phase 3：数据源 Adapter 与基础规则 Agent
 
-当前 UI 已从普通仪表盘升级为更接近 Rena / WorkBuddy 思路的 **AI 投研分析台**，核心区域包括：
+已完成 MVP 骨架：
 
-- 股票名称或代码输入入口
-- “开始分析”按钮
-- Orchestrator 仲裁结果
-- 7 个专家 Agent Signal 表
-- Agent 方向、置信度、权重、核心依据
-- 自选股研究队列
-- 今日投研日报
-- 证据链
-- 风险提醒
-- 搜索问答入口
-- 合规免责声明
+- `backend/app/data_sources/adapters.py`
+- `MockPublicDataAdapter`。
+- 数据源状态包含授权状态、endpoint 类型、刷新频率和 terms notes。
+- 文档可通过 `POST /api/v1/documents` 手动入库。
+- 行情快照可通过 `POST /api/v1/market-snapshots` 入库。
+- TechnicalAgent 和 FundFlowAgent 在存在行情/资金快照时使用规则计算；数据不足时降级到 mock 输出。
 
-当前页面仍是静态 mock 数据，但已经具备产品形态。
+说明：外部真实数据源仍需后续按授权逐个接入；当前已经具备合法 adapter 接口和本地数据路径。
 
-### 2.4 Rena / WorkBuddy PDF 解读
+### 2.5 Phase 4：RAG 与证据链
 
-已读取并分析用户提供的文件：
+已完成 MVP 骨架：
 
-`Work Buddy使用Rena 简易流程0524(6)(1).pdf`
+- `documents` 本地持久化。
+- `document_chunks` chunk 持久化。
+- 证据等级 S/A/B/C/D。
+- mock embedding 和 chunk 相似度检索。
+- `backend/app/services/rag.py` 可检索到 `EvidenceItem`。
+- Agent 输出中包含核心证据、反方证据、风险、缺失信息和假设。
+- 前端展示证据来源、类型、等级、时间、摘要和相关性。
 
-从文件中提炼出的关键方向：
+说明：当前 embedding provider 是本地 deterministic mock，便于无外部密钥运行；PostgreSQL + pgvector 环境和迁移已预留。
 
-- WorkBuddy 是接入大模型的 Agent 容器。
-- Rena 是多 Agent 架构。
-- Rena 的核心是多个专家 Agent 输出标准 Signal。
-- 用户输入股票名称或代码后，系统运行专家分析并输出仲裁结果。
-- 参考架构包含财务、技术指标、资金、宏观、行业、舆情、风险等专家能力。
+### 2.6 Phase 5：风险与合规
 
-基于该文件，我们确定后续项目方向应从“投研看板”升级为：
+已完成 MVP：
 
-> 输入股票 -> 7 个专家 Agent 分析 -> 输出标准 Signal -> Orchestrator 仲裁 -> 给出研究建议、风险和证据链
+- RiskAgent 参与 7 Agent 分析。
+- Orchestrator 对 RiskAgent 谨慎/负向信号进行降级。
+- 只有低等级证据时添加信息不足提示。
+- ComplianceGuard 拦截 forbidden phrases。
+- `scripts/compliance_scan.sh` 扫描禁止交易/账户能力。
 
-### 2.5 GitHub 仓库
+说明：重大风险规则库、时效性衰减和动态权重仍是基础实现；外部风险公告和监管数据可通过 adapter 接入。
 
-已初始化本地 Git 仓库，并推送到 GitHub。
+### 2.7 Phase 6：日报、提醒、复盘 API
 
-仓库地址：
+已完成 MVP API：
 
-https://github.com/lvzhangyu505/gushen.git
+- `GET /api/v1/watchlist`
+- `POST /api/v1/watchlist`
+- `DELETE /api/v1/watchlist/{stock_code}`
+- `GET /api/v1/alerts`
+- `POST /api/v1/alerts`
+- `POST /api/v1/alerts/{alert_id}/mark-read`
+- `GET /api/v1/daily-report`
+- `GET /api/v1/research-history`
+- `GET /api/v1/research-reviews`
+- `POST /api/v1/research-reviews`
+- `GET /api/v1/weekly-review`
+- APScheduler 启动后注册每日投研日报任务和周复盘任务。
+- 周复盘报告包含 Agent 信号数量和平均置信度统计。
 
-当前分支：
+说明：日报和周复盘已具备自动任务骨架，真实数据触发条件后续通过 adapter 扩展。
 
-```text
-main
-```
+### 2.8 基础设施与验证
 
-当前最新提交：
+已完成：
 
-```text
-b1f9c49 Redesign investment research workspace UI
-```
+- SQLAlchemy 持久化，默认使用本地 SQLite：`backend/.data/gushen.sqlite3`，已加入 `.gitignore`。
+- 可通过 `DATABASE_URL` 切换 PostgreSQL。
+- Alembic 迁移骨架和初始迁移已添加。
+- PostgreSQL + pgvector Docker Compose 预留：`infra/docker-compose.yml`。
+- `scripts/benchmark_startup.py` 启动自检。
+- `scripts/compliance_scan.sh` 合规扫描。
+- `scripts/dev.sh` 本地启动提示。
+- README 已记录启动与验证命令。
 
-### 2.6 Vercel 线上部署
-
-已部署到 Vercel，并确认生产部署状态为 `READY`。
-
-线上地址：
-
-https://frontend-ashen-psi-30.vercel.app
-
-Vercel 项目信息：
-
-```text
-Project: frontend
-Project ID: prj_pFT0zS6kpi9dBRyhvNH4haw73TsY
-Latest Deployment: dpl_52qBubZxo7N9eqzeDK9KNjSbSwd8
-```
-
-## 3. 当前技术栈
+## 3. 当前真实技术状态
 
 ### 前端
 
@@ -141,131 +147,91 @@ Latest Deployment: dpl_52qBubZxo7N9eqzeDK9KNjSbSwd8
 - React
 - TypeScript
 - Tailwind CSS
-- lucide-react 图标
+- lucide-react
 - pnpm
+- 已接入后端 API、SSE EventSource 和轮询兜底。
 
-### 后端规划
+### 后端
 
 - Python
 - FastAPI
 - Pydantic
-- SQLAlchemy 或 SQLModel
-- PostgreSQL
-- pgvector
+- SQLAlchemy。
+- SQLite 默认本地数据库。
+- PostgreSQL 可通过 `DATABASE_URL` 切换。
+- Alembic 迁移骨架。
 
-### AI 架构规划
+### AI / 数据
 
-- RAG
-- 多 Agent
-- 统一 Signal schema
-- Orchestrator 仲裁
-- 合规审查 Agent
+- 7 个 Agent。
+- ModelRouter 骨架。
+- Mock/file data adapter 骨架。
+- mock embedding + chunk 检索。
+- TechnicalAgent / FundFlowAgent 可使用本地 market snapshot 真实规则计算。
+- 尚未接真实 LLM、外部 embedding、reranker 或外部真实数据源。
 
-### 调度规划
+## 4. 已通过验证
 
-- MVP 阶段：APScheduler
-- 后续扩展：Celery
+后端测试：
 
-## 4. 当前产品状态
+```bash
+cd backend
+.venv/bin/pytest -q
+```
 
-当前已经完成：
+结果：
 
-- 产品方向确定
-- 文档体系完成
-- 前端原型完成
-- UI 初步优化完成
-- GitHub 仓库建立并推送
-- Vercel 线上预览完成
+```text
+11 passed
+```
 
-当前尚未完成：
+前端构建：
 
-- FastAPI 后端真实服务
-- `/api/v1/analyze-stock` 分析接口
-- 7 个专家 Agent 的真实实现
-- Orchestrator 仲裁逻辑
-- 前端与后端联调
-- PostgreSQL 数据库和 pgvector
-- 真实数据源采集
-- RAG 检索与证据链生成
-- 登录、用户体系和权限
-- 自动日报生成任务
+```bash
+cd frontend
+pnpm build
+```
 
-## 5. 当前 UI 设计方向
+结果：构建通过。
 
-当前 UI 不再做普通营销页或轻量看板，而是偏向专业投研终端：
+启动自检：
 
-- 左侧固定导航
-- 高密度信息布局
-- 第一屏突出股票分析入口
-- 深色仲裁卡突出最终研究结论
-- 表格化展示专家 Agent 结果
-- 信号方向使用颜色区分：
-  - 偏多：绿色
-  - 中性：灰色
-  - 偏空：红色
-- 风险提示使用橙色或红色
-- 建议页面固定显示免责声明
+```bash
+backend/.venv/bin/python scripts/benchmark_startup.py
+```
 
-## 6. 合规要求
+结果：通过。
 
-项目持续遵守以下合规边界：
+合规扫描：
 
-- 不能做券商接口
-- 不能做交易 API
-- 不能做账户同步
-- 不能下单
-- 不能撤单
-- 不能自动交易
-- 不能托管资金账户
-- 不能输出“必须买入”“必须卖出”“保证收益”等确定性指令
-- 所有建议必须有证据链
-- 无证据时返回：`信息不足，无法形成建议。`
-- 所有建议与日报页面必须显示免责声明：
+```bash
+scripts/compliance_scan.sh
+```
 
-> 本系统仅用于个人研究辅助，不构成确定性投资承诺。
+结果：通过。
 
-## 7. 下一阶段建议
+## 5. 仍未完整完成的内容
 
-下一步建议从“静态 UI”进入“可运行 MVP”。
+这些不是当前 12 个任务包的阻塞项，而是后续产品化增强：
 
-推荐开发顺序：
+1. 接入真实合法数据源，例如公告、行情、财报、新闻或政策接口。
+2. 使用真实 embedding provider 替换 mock embedding。
+3. 在 PostgreSQL 环境中启用 pgvector 原生向量索引。
+4. 扩展更多真实 Agent 规则和风险规则库。
+5. 增加前端测试框架；当前用 `pnpm build` 和免责声明检查脚本覆盖基础检查。
 
-1. 建立 FastAPI 后端骨架。
-2. 新增 `/api/v1/analyze-stock` 接口。
-3. 定义统一 Signal schema。
-4. 实现 7 个专家 Agent 的 mock 版本：
-   - FinancialAgent
-   - TechnicalAgent
-   - FundFlowAgent
-   - MacroAgent
-   - IndustryAgent
-   - SentimentAgent
-   - RiskAgent
-5. 实现 Orchestrator 仲裁逻辑。
-6. 前端“开始分析”按钮接入后端。
-7. 前端展示真实返回的 Agent 运行状态和分析结果。
-8. 接入第一批真实数据源。
-9. 引入 PostgreSQL + pgvector。
-10. 开始做 RAG 证据检索。
+## 6. 下一步建议
 
-## 8. 下一阶段目标定义
+如果继续推进，建议优先顺序：
 
-建议把下一阶段目标定义为：
+1. 启动 PostgreSQL + pgvector，并把 `DATABASE_URL` 切到 PostgreSQL。
+2. 接入一个合法行情或公告数据源 adapter。
+3. 使用真实 embedding provider 替换 mock embedding。
+4. 增加前端测试框架。
 
-> 输入“兴森科技 / 002436” -> 后端运行 7 个专家 Agent -> 返回标准 Signal -> Orchestrator 给出研究建议 -> 前端动态展示结果、风险和证据。
+## 7. 重要链接
 
-这一步完成后，系统就会从“产品原型”进入“真正可运行的 AI 投研 Agent MVP”。
-
-## 9. 重要链接
-
-GitHub 仓库：
-
-https://github.com/lvzhangyu505/gushen.git
-
-Vercel 线上预览：
-
-https://frontend-ashen-psi-30.vercel.app
-
-参考 PDF：
-
-`Work Buddy使用Rena 简易流程0524(6)(1).pdf`
+- GitHub: https://github.com/lvzhangyu505/gushen.git
+- Vercel: https://frontend-ashen-psi-30.vercel.app
+- 最终架构文档：`docs/final-architecture.md`
+- 任务包索引：`docs/task-packages/00-task-package-index.md`

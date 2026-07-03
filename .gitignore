@@ -14,10 +14,13 @@ __pycache__/
 .venv/
 backend/.venv/
 .pytest_cache/
+backend/.pytest_cache/
+backend/**/__pycache__/
 
 # Local generated files
 tmp/
 output/
+backend/.data/
 
 # Logs
 *.log
@@ -29,3 +32,4 @@ yarn-error.log*
 # OS / editor
 .idea/
 .vscode/
+infra/.DS_Store
