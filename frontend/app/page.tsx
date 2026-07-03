@@ -55,15 +55,15 @@ const risks = [
 ];
 
 const agents = ["采集清洗", "证据检索", "个股分析", "风险识别", "日报生成", "合规审查"];
-const navItems: Array<[string, LucideIcon, boolean]> = [
-  ["即时分析", Sparkles, true],
-  ["仪表盘", BarChart3, false],
-  ["自选股", BookOpenText, false],
-  ["每日投研日报", FileSearch, false],
-  ["风险中心", AlertTriangle, false],
-  ["投资笔记", NotebookPen, false],
-  ["搜索问答", Search, false],
-  ["数据源状态", Database, false],
+const navItems: Array<[string, LucideIcon, string, boolean]> = [
+  ["即时分析", Sparkles, "#instant-analysis", true],
+  ["仪表盘", BarChart3, "#dashboard", false],
+  ["自选股", BookOpenText, "#watchlist", false],
+  ["每日投研日报", FileSearch, "#daily-report", false],
+  ["风险中心", AlertTriangle, "#risk-center", false],
+  ["投资笔记", NotebookPen, "#notes", false],
+  ["搜索问答", Search, "#qa", false],
+  ["数据源状态", Database, "#data-sources", false],
 ];
 
 function DirectionBadge({ value }: { value: SignalDirection }) {
@@ -280,10 +280,10 @@ export default function Home() {
           </div>
         </div>
         <nav className="space-y-1 text-sm">
-          {navItems.map(([label, Icon, active]) => (
+          {navItems.map(([label, Icon, href, active]) => (
             <a
               key={label}
-              href={active ? "#instant-analysis" : "#dashboard"}
+              href={href}
               className={`flex items-center gap-3 rounded-md px-3 py-2 ${
                 active ? "bg-[#e8f3ef] text-[#146a55]" : "text-[#344054] hover:bg-[#eef4f1]"
               }`}
@@ -574,7 +574,7 @@ export default function Home() {
             </section>
 
             <section className="mt-5 grid gap-5 xl:grid-cols-[1.35fr_0.9fr]">
-              <div className="rounded-md border border-[#dfe5ef] bg-white">
+              <div id="watchlist" className="scroll-mt-24 rounded-md border border-[#dfe5ef] bg-white">
                 <div className="flex items-center justify-between border-b border-[#dfe5ef] px-4 py-3">
                   <div className="flex items-center gap-2 font-semibold">
                     <BookOpenText size={18} />
@@ -615,7 +615,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="rounded-md border border-[#dfe5ef] bg-white">
+              <div id="daily-report" className="scroll-mt-24 rounded-md border border-[#dfe5ef] bg-white">
                 <div className="border-b border-[#dfe5ef] px-4 py-3 font-semibold">每日投研日报</div>
                 <div className="space-y-4 p-4">
                   {[
@@ -633,7 +633,7 @@ export default function Home() {
             </section>
 
             <section className="mt-5 grid gap-5 xl:grid-cols-3">
-              <div className="rounded-md border border-[#dfe5ef] bg-white p-4">
+              <div id="risk-center" className="scroll-mt-24 rounded-md border border-[#dfe5ef] bg-white p-4">
                 <div className="mb-4 flex items-center gap-2 font-semibold">
                   <AlertTriangle size={18} />
                   风险提醒
@@ -678,6 +678,63 @@ export default function Home() {
                     <div key={agent} className="flex items-center gap-3 text-sm">
                       <div className="grid size-6 place-items-center rounded-full bg-[#eef4f1] text-xs font-semibold text-[#146a55]">{index + 1}</div>
                       <span>{agent}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            <section className="mt-5 grid gap-5 xl:grid-cols-3">
+              <div id="notes" className="scroll-mt-24 rounded-md border border-[#dfe5ef] bg-white p-4">
+                <div className="mb-4 flex items-center gap-2 font-semibold">
+                  <NotebookPen size={18} />
+                  投资笔记
+                </div>
+                <div className="space-y-3 text-sm leading-6 text-[#344054]">
+                  <div className="rounded-md border border-[#eef2f7] bg-[#f8fafc] p-3">
+                    <div className="text-xs font-medium text-[#697386]">002436 / 中期观察</div>
+                    <p className="mt-1">优先补充公告、财报和订单数据，再复核技术与资金信号。</p>
+                  </div>
+                  <div className="rounded-md border border-[#eef2f7] bg-[#f8fafc] p-3">
+                    <div className="text-xs font-medium text-[#697386]">风险纪律</div>
+                    <p className="mt-1">RiskAgent 高置信谨慎时，研究卡自动降级，不形成强方向结论。</p>
+                  </div>
+                </div>
+              </div>
+
+              <div id="qa" className="scroll-mt-24 rounded-md border border-[#dfe5ef] bg-white p-4">
+                <div className="mb-4 flex items-center gap-2 font-semibold">
+                  <Search size={18} />
+                  搜索问答
+                </div>
+                <div className="rounded-md border border-[#dfe5ef] bg-[#f8fafc] px-3 py-2 text-sm text-[#697386]">
+                  搜索自选股、证据标题、风险提醒或日报摘要
+                </div>
+                <div className="mt-3 space-y-3 text-sm leading-6 text-[#344054]">
+                  <p>示例问题：002436 当前主要缺失哪些证据？</p>
+                  <p className="rounded-md border border-[#eef2f7] bg-[#f8fafc] p-3">
+                    回答会优先引用证据链，证据不足时返回“信息不足，无法形成建议。”
+                  </p>
+                </div>
+              </div>
+
+              <div id="data-sources" className="scroll-mt-24 rounded-md border border-[#dfe5ef] bg-white p-4">
+                <div className="mb-4 flex items-center gap-2 font-semibold">
+                  <Database size={18} />
+                  数据源状态
+                </div>
+                <div className="space-y-3 text-sm">
+                  {[
+                    ["Mock / Demo API", "正常", "线上预览交互"],
+                    ["本地 FastAPI", "可运行", "完整 Agent MVP"],
+                    ["PostgreSQL + pgvector", "已预留", "等待正式环境接入"],
+                  ].map(([name, status, note]) => (
+                    <div key={name} className="flex items-center justify-between gap-3 rounded-md border border-[#eef2f7] bg-[#f8fafc] p-3">
+                      <div>
+                        <div className="font-medium">{name}</div>
+                        <div className="mt-1 text-xs text-[#697386]">{note}</div>
+                      </div>
+                      <span className="rounded-md bg-[#eef4f1] px-2 py-1 text-xs font-medium text-[#146a55]">{status}</span>
                     </div>
                   ))}
                 </div>
